@@ -50,8 +50,10 @@ async function deleteUser(req, res) {
 async function updateUser(req, res) {
   try {
     const user = req.body
-    const savedUser = await userService.update(user)
-    res.send(savedUser)
+    const updatedUser = await userService.update(user)
+    const loginToken = authService.getLoginToken(updatedUser)
+    res.cookie('loginToken', loginToken)
+    res.send(updatedUser)
   } catch (err) {
     logger.error('Failed to update user', err)
     res.status(500).send({ err: 'Failed to update user' })

@@ -35,9 +35,7 @@ async function getMiniUsers(chats) {
   for (let chat of chats) {
     chat.participants = chat.participants.map((userId) => new ObjectId(userId))
     chat.participants = await collection
-      .find({
-        _id: { $in: chat.participants },
-      })
+      .find({ _id: { $in: chat.participants } })
       .project({ _id: 1, username: 1, profileImg: 1 })
       .toArray()
   }
@@ -71,10 +69,13 @@ async function update(user) {
     const userToSave = {
       _id: new ObjectId(user._id), // needed for the returnd obj
       chats: user.chats,
+      profileImg: user.profileImg,
     }
     const collection = await dbService.getCollection('user')
     await collection.updateOne({ _id: userToSave._id }, { $set: userToSave })
-    return userToSave
+    const updatedUser = await collection.findOne({ _id: userToSave._id })
+    delete updatedUser.password
+    return updatedUser
   } catch (err) {
     logger.error(`cannot update user ${user._id}`, err)
     throw err
@@ -86,7 +87,6 @@ async function add(user) {
     // peek only updatable fields!
     const userToAdd = {
       username: user.username,
-      phoneNumber: user.phoneNumber,
       password: user.password,
       contacts: [],
       chats: [],

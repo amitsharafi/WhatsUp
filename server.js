@@ -1,11 +1,12 @@
 const express = require('express')
+const dotenv = require('dotenv')
 const cors = require('cors')
 const path = require('path')
 const cookieParser = require('cookie-parser')
 
+dotenv.config()
 const app = express()
 const httpServer = require('http').createServer(app)
-
 // Express App Config
 app.use(cookieParser())
 
@@ -14,13 +15,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.resolve(__dirname, 'public')))
 } else {
   const corsOptions = {
-    origin: [
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:8080',
-      'http://localhost:8080',
-      'http://127.0.0.1:3000',
-      'http://localhost:3000',
-    ],
+    origin: ['http://127.0.0.1:5173', 'http://127.0.0.1:8080', 'http://localhost:8080', 'http://127.0.0.1:3000', 'http://localhost:3000'],
     credentials: true,
   }
   app.use(cors(corsOptions))
@@ -29,6 +24,7 @@ if (process.env.NODE_ENV === 'production') {
 const authRoutes = require('./api/auth/auth.routes')
 const userRoutes = require('./api/user/user.routes')
 const chatRoutes = require('./api/chat/chat.routes')
+const fileRoutes = require('./api/file/file.routes')
 const { setupSocketAPI } = require('./services/socket.service')
 
 // routes
@@ -38,6 +34,7 @@ app.all('*', setupAsyncLocalStorage)
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api/file', fileRoutes)
 setupSocketAPI(httpServer)
 
 // Make every server-side-route to match the index.html
