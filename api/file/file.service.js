@@ -11,10 +11,19 @@ async function upload(filepath) {
     const res = await cloudinary.uploader.upload(filepath)
     return res.secure_url
   } catch (err) {
-    console.log('Failed upload to cloudinary', err)
+    console.log('Cannot upload cloudinary file: ', err)
+  }
+}
+
+async function destroy(publicId) {
+  try {
+    cloudinary.uploader.destroy(publicId)
+  } catch (err) {
+    console.log('Cannot delete cloudinary file: ', err)
   }
 }
 
 module.exports = {
   upload,
+  destroy,
 }

@@ -65,6 +65,7 @@ async function addChat(req, res) {
     await userService.update(loggedInUser)
     await userService.update(contact)
     const [chat] = await userService.getMiniUsers([addedChat])
+    socketService.createChatRoom({ usersIds: [loggedInUser._id, contact._id.toString()], chatId: chat._id.toString() })
     // User info is saved also in the login-token, update it
     const loginToken = authService.getLoginToken(loggedInUser)
     res.cookie('loginToken', loginToken, { sameSite: 'None', secure: true })

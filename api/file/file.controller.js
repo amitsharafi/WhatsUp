@@ -1,5 +1,5 @@
 const formidable = require('formidable')
-const { upload } = require('./file.service')
+const { upload, destroy } = require('./file.service')
 
 async function uploadFile(req, res) {
   try {
@@ -9,10 +9,19 @@ async function uploadFile(req, res) {
     const url = await upload(files.file[0].filepath)
     res.send(url)
   } catch (err) {
-    console.log('Failed to parse file', err)
+    console.log('Failed to upload file: ', err)
+  }
+}
+async function deleteFile(req, res) {
+  try {
+    const publicId = req.body.url.split('/').pop().split('.')[0]
+    destroy(publicId)
+  } catch (err) {
+    console.log('Failed to delete file: ', err)
   }
 }
 
 module.exports = {
   uploadFile,
+  deleteFile,
 }

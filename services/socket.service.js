@@ -3,7 +3,10 @@ const logger = require('./logger.service')
 var gIo = null
 const USER_LOGIN = 'user-login'
 const CLIENT_EMIT_MSG = 'send-msg'
+const CLIENT_EMIT_CHAT = 'send-chat'
 const SERVER_EMIT_MSG = 'add-msg'
+const SERVER_EMIT_CHAT = 'add-chat'
+const TYPING = 'typing'
 
 function setupSocketAPI(http) {
   gIo = require('socket.io')(http, {
@@ -20,9 +23,7 @@ function setupSocketAPI(http) {
       if (socket.myTopic === topic) return
       if (socket.myTopic) {
         socket.leave(socket.myTopic)
-        logger.info(
-          `Socket is leaving topic ${socket.myTopic} [id: ${socket.id}]`
-        )
+        logger.info(`Socket is leaving topic ${socket.myTopic} [id: ${socket.id}]`)
       }
       socket.join(topic)
       socket.myTopic = topic
@@ -34,7 +35,14 @@ function setupSocketAPI(http) {
         socket.join(chat)
       })
     })
-
+    socket.on(TYPING, ({ chatId, userId }) => {
+      broadcast({
+        type: 'typing',
+        data: chatId,
+        room: chatId,
+        userId,
+      })
+    })
     socket.on(CLIENT_EMIT_MSG, ({ chatId, addedMsg }) => {
       broadcast({
         type: SERVER_EMIT_MSG,
@@ -43,26 +51,28 @@ function setupSocketAPI(http) {
         userId: addedMsg.sentBy,
       })
     })
+    socket.on(CLIENT_EMIT_CHAT, ({ chat, userId }) => {
+      broadcast({
+        type: SERVER_EMIT_CHAT,
+        data: chat,
+        room: chat._id,
+        userId,
+      })
+    })
 
     socket.on('chat-send-msg', (msg) => {
-      logger.info(
-        `New chat msg from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`
-      )
+      logger.info(`New chat msg from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
       // emits to all sockets:
       // gIo.emit('chat addMsg', msg)
       // emits only to sockets in the same room
       gIo.to(socket.myTopic).emit('chat-add-msg', msg)
     })
     socket.on('user-watch', (userId) => {
-      logger.info(
-        `user-watch from socket [id: ${socket.id}], on user ${userId}`
-      )
+      logger.info(`user-watch from socket [id: ${socket.id}], on user ${userId}`)
       socket.join('watching:' + userId)
     })
     socket.on('set-user-socket', (userData) => {
-      logger.info(
-        `Setting socket.userId = ${userData.userId} for socket [id: ${socket.id}]`
-      )
+      logger.info(`Setting socket.userId = ${userData.userId} for socket [id: ${socket.id}]`)
       socket.userId = userData.userId
       userData.userChats.forEach((chat) => socket.join(chat))
     })
@@ -90,9 +100,7 @@ async function emitToUser({ type, data, userId }) {
   const socket = await _getUserSocket(userId)
 
   if (socket) {
-    logger.info(
-      `Emiting event: ${type} to user: ${userId} socket [id: ${socket.id}]`
-    )
+    logger.info(`Emiting event: ${type} to user: ${userId} socket [id: ${socket.id}]`)
     socket.emit(type, data)
   } else {
     logger.info(`No active socket for user: ${userId}`)
@@ -140,6 +148,15 @@ function _printSocket(socket) {
   console.log(`Socket - socketId: ${socket.id} userId: ${socket.userId}`)
 }
 
+async function createChatRoom({ usersIds, chatId }) {
+  for (const userId of usersIds) {
+    const socket = await _getUserSocket(userId)
+    if (socket) {
+      socket.join(chatId)
+    }
+  }
+}
+
 module.exports = {
   // set up the sockets service and define the API
   setupSocketAPI,
@@ -150,4 +167,5 @@ module.exports = {
   // Send to all sockets BUT not the current socket - if found
   // (otherwise broadcast to a room / to all)
   broadcast,
+  createChatRoom,
 }
