@@ -151,9 +151,7 @@ function _printSocket(socket) {
 async function createChatRoom({ usersIds, chatId }) {
   for (const userId of usersIds) {
     const socket = await _getUserSocket(userId)
-    if (socket) {
-      socket.join(chatId)
-    }
+    if (socket) socket.join(chatId)
   }
 }
 
