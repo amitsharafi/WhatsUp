@@ -34,7 +34,7 @@ function setupSocketAPI(http) {
       chats.forEach((chat) => {
         socket.join(chat._id || chat)
       })
-      console.log(gIo.sockets.adapter.rooms)
+      // console.log(gIo.sockets.adapter.rooms)
     })
     socket.on(TYPING, ({ chatId, userId }) => {
       broadcast({

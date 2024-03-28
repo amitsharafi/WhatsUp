@@ -7,7 +7,6 @@ const chatService = require('./chat.service')
 async function getChats(req, res) {
   try {
     const loggedInUser = authService.validateToken(req.cookies.loginToken)
-    console.log(loggedInUser.chats)
     const chats = await chatService.query(loggedInUser.chats)
     res.send(chats)
   } catch (err) {

@@ -59,6 +59,19 @@ async function updateUser(req, res) {
     res.status(500).send({ err: 'Failed to update user' })
   }
 }
+async function updateCookie(req, res) {
+  try {
+    const loggedInUser = authService.validateToken(req.cookies.loginToken)
+    const user = await userService.getById(loggedInUser._id)
+    if (user) {
+      const loginToken = authService.getLoginToken(user)
+      res.cookie('loginToken', loginToken, { sameSite: 'None', secure: true })
+      res.send(user)
+    }
+  } catch (err) {
+    logger.error('Failed to update cookie', err)
+  }
+}
 
 module.exports = {
   getUser,
@@ -66,4 +79,5 @@ module.exports = {
   deleteUser,
   updateUser,
   getUsersImgs,
+  updateCookie,
 }

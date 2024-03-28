@@ -6,6 +6,7 @@ module.exports = {
   query,
   getMiniUsers,
   getByUsername,
+  getById,
   remove,
   update,
   add,
@@ -26,6 +27,18 @@ async function query(filterBy = {}) {
     return users
   } catch (err) {
     logger.error('cannot find users', err)
+    throw err
+  }
+}
+
+async function getById(userId) {
+  try {
+    const collection = await dbService.getCollection('user')
+    const user = await collection.findOne({ _id: new ObjectId(userId) })
+    delete user.password
+    return user
+  } catch (err) {
+    logger.error(`while finding user by id: ${userId}`, err)
     throw err
   }
 }
