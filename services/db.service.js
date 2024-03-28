@@ -7,7 +7,7 @@ module.exports = {
 }
 
 // Database Name
-const dbName = 'chat_db'
+const dbName = 'whatsapp_db'
 
 var dbConn = null
 
