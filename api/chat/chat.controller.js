@@ -7,6 +7,7 @@ const chatService = require('./chat.service')
 async function getChats(req, res) {
   try {
     const loggedInUser = authService.validateToken(req.cookies.loginToken)
+    console.log(loggedInUser.chats)
     const chats = await chatService.query(loggedInUser.chats)
     res.send(chats)
   } catch (err) {
@@ -53,8 +54,9 @@ async function deleteChat(req, res) {
 
 async function addChat(req, res) {
   try {
-    let loggedInUser = authService.validateToken(req.cookies.loginToken)
+    const loggedInUser = authService.validateToken(req.cookies.loginToken)
     const { username } = req.body
+    if (username === loggedInUser.username) return res.status(401).send({ err: 'Cannot add yourself' })
     const contact = await userService.getByUsername(username)
     if (!contact) return res.status(401).send({ err: 'User does not exist' })
     const isChatExist = await chatService.isChatExist(loggedInUser.chats, contact._id)
@@ -69,7 +71,6 @@ async function addChat(req, res) {
     // User info is saved also in the login-token, update it
     const loginToken = authService.getLoginToken(loggedInUser)
     res.cookie('loginToken', loginToken, { sameSite: 'None', secure: true })
-
     // socketService.broadcast({
     //   type: 'chat-added',
     //   data: chat,

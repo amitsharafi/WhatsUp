@@ -52,7 +52,7 @@ async function updateUser(req, res) {
     const user = req.body
     const updatedUser = await userService.update(user)
     const loginToken = authService.getLoginToken(updatedUser)
-    res.cookie('loginToken', loginToken)
+    res.cookie('loginToken', loginToken, { sameSite: 'None', secure: true })
     res.send(updatedUser)
   } catch (err) {
     logger.error('Failed to update user', err)

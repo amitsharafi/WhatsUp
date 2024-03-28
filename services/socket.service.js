@@ -32,8 +32,9 @@ function setupSocketAPI(http) {
       logger.info(`new user logged in: ${_id}`)
       socket.userId = _id
       chats.forEach((chat) => {
-        socket.join(chat)
+        socket.join(chat._id || chat)
       })
+      console.log(gIo.sockets.adapter.rooms)
     })
     socket.on(TYPING, ({ chatId, userId }) => {
       broadcast({
